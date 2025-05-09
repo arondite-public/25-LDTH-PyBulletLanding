@@ -10,3 +10,7 @@ This is a template for python projects. It includes a barebones .gititnore as we
 Further setup notes
 
 ## Running
+
+## Rules
+
+You will need to implement the `compute_velocity` function within `drones/main.py`. This function has access to the drone state, alongside the latest image captured by the onboard camera.
