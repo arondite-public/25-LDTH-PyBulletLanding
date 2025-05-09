@@ -18,8 +18,8 @@ dependencies = [
   "stable-baselines3>=2.0.0"
 ]
 
-[project.urls]
-Repository = "https://github.com/utiasDSL/gym-pybullet-drones"
+# [project.urls]
+# Repository = "https://github.com/utiasDSL/gym-pybullet-drones"
 
 # [build-system]
 # requires = ["hatchling"]
