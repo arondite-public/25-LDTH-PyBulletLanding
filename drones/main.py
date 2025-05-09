@@ -27,8 +27,10 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pybullet as p
+from numpy.typing import NDArray
 
 from .control.DSLPIDControl import DSLPIDControl
+from .envs.BaseAviary import BaseAviary
 from .envs.CtrlAviary import CtrlAviary
 from .utils.enums import Difficulty, DroneModel, Physics
 from .utils.Logger import Logger
@@ -44,6 +46,23 @@ DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = "results"
+
+
+def capture_image(env: BaseAviary) -> NDArray:
+    """Capture an image from the drone's camera
+
+    Note: The camera is facing directly downwards.
+    """
+    rgb, _, _ = env._getDroneImages(0, segmentation=False)
+    return rgb
+
+
+def compute_position(image: NDArray):
+    """Compute the target position for the drone from the provided image"""
+
+    # Implement this function
+
+    return np.array([0, 0, 1])  # Dummy position
 
 
 def run(
@@ -104,14 +123,17 @@ def run(
         # if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
 
         #### Step the simulation ###################################
-        obs, reward, terminated, truncated, info = env.step(action)
+        obs, _, _, _, _ = env.step(action)
+
+        image = capture_image(env)
+        target_pos = compute_position(image)
 
         #### Compute control for the current way point #############
         # TODO decide your target control values
         action[:], _, _ = ctrl.computeControlFromState(
             control_timestep=env.CTRL_TIMESTEP,
             state=obs[0],
-            target_pos=np.array([0, 0, 2.1], dtype=np.single),
+            target_pos=target_pos,
             target_rpy=np.array([0.0, 0.0, 0.0], dtype=np.single),
         )
 
