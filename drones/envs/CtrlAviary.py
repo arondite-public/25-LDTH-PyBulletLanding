@@ -2,7 +2,7 @@ import numpy as np
 from gymnasium import spaces
 
 from ..envs.BaseAviary import BaseAviary
-from ..utils.enums import DroneModel, Physics
+from ..utils.enums import Difficulty, DroneModel, Physics
 
 
 class CtrlAviary(BaseAviary):
@@ -25,6 +25,7 @@ class CtrlAviary(BaseAviary):
         obstacles=False,
         user_debug_gui=True,
         output_folder="results",
+        difficulty: Difficulty = Difficulty.BASIC,
     ):
         """Initialization of an aviary environment for control applications.
 
@@ -70,6 +71,7 @@ class CtrlAviary(BaseAviary):
             obstacles=obstacles,
             user_debug_gui=user_debug_gui,
             output_folder=output_folder,
+            difficulty=difficulty,
         )
 
     ################################################################################

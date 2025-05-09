@@ -2,9 +2,11 @@ import collections
 import os
 import time
 import xml.etree.ElementTree as etxml
+from dataclasses import dataclass
 from datetime import datetime
+from itertools import product
 from sys import platform
-from typing import Optional, override
+from typing import List, Optional, override
 
 import gymnasium as gym
 
@@ -16,7 +18,23 @@ import pybullet as p
 import pybullet_data
 from PIL import Image
 
-from ..utils.enums import DroneModel, ImageType, Physics
+from ..utils.enums import Difficulty, DroneModel, ImageType, Physics
+
+
+@dataclass
+class WaveData:
+    wl: float
+    amp: float
+    ws: float
+    theta: float
+
+    @property
+    def dirvec(self):
+        return np.array([np.sin(self.theta), np.cos(self.theta)])
+
+
+def eval_wave(wd: WaveData, timestep: float, coord):
+    return wd.amp * np.sin(wd.wl * (np.dot(coord, wd.dirvec) + wd.ws * timestep))
 
 
 class BaseAviary(gym.Env):
@@ -42,6 +60,7 @@ class BaseAviary(gym.Env):
         user_debug_gui=True,
         vision_attributes=True,
         output_folder="results",
+        difficulty: Difficulty = Difficulty.BASIC,
     ):
         """Initialization of a generic aviary environment.
 
@@ -100,6 +119,7 @@ class BaseAviary(gym.Env):
         self.USER_DEBUG = user_debug_gui
         self.URDF = self.DRONE_MODEL.value + ".urdf"
         self.OUTPUT_FOLDER = output_folder
+        self.DIFFICULTY = difficulty
         #### Load the drone properties from the .urdf file #########
         (
             self.M,
@@ -349,6 +369,33 @@ class BaseAviary(gym.Env):
         return initial_obs, initial_info
 
     ################################################################################
+    def _apply_waveforce_to_platform(
+        self, timestep: float, waves: List[WaveData], platformObjectIdx: int
+    ):
+        bound, samples = 0.2, 3
+        disp = np.zeros([samples, samples], dtype=np.single)
+        x = np.linspace(start=-bound, stop=bound, num=samples, dtype=np.single)
+        y = np.linspace(start=-bound, stop=bound, num=samples, dtype=np.single)
+        xx, yy = np.meshgrid(x, y)
+        coord = np.stack([xx, yy], axis=-1)
+        for wave in waves:
+            disp += eval_wave(wd=wave, timestep=timestep, coord=coord)
+        force_vec = disp * self.LANDPAD_SPRING_CONSTANT  # Spring(esque) constant
+        for idx, jdx in product(range(samples), range(samples)):
+            p.applyExternalForce(
+                platformObjectIdx,
+                1,
+                (0.0, 0.0, force_vec[idx, jdx].item()),
+                (x[idx], y[jdx], 0.0),
+                p.LINK_FRAME,
+            )
+            p.applyExternalForce(
+                platformObjectIdx,
+                2,
+                (0.0, 0.0, force_vec[idx, jdx].item()),
+                (x[idx], y[jdx], 0.0),
+                p.LINK_FRAME,
+            )
 
     def step(self, action):
         """Advances the environment by one simulation step.
@@ -457,6 +504,13 @@ class BaseAviary(gym.Env):
                 Physics.PYB_GND_DRAG_DW,
             ]:
                 self._updateAndStoreKinematicInformation()
+            #### Step the landing platform physics
+            self._apply_waveforce_to_platform(
+                timestep=self.PYB_TIMESTEP * self.step_counter,
+                waves=self.WAVES,
+                platformObjectIdx=self.LANDPAD_ID,
+            )
+
             #### Step the simulation using the desired physics update ##
             for i in range(self.NUM_DRONES):
                 if self.PHYSICS == Physics.PYB:
@@ -577,6 +631,54 @@ class BaseAviary(gym.Env):
 
     ################################################################################
 
+    def _setupLandingPad(self) -> int:
+        objIdx = p.loadURDF(
+            "arondite/assets/platform.urdf",
+            basePosition=[np.random.random() * 2, np.random.random() * 2, 0.5],
+            physicsClientId=self.CLIENT,
+            useFixedBase=1,
+        )
+        match self.DIFFICULTY:
+            case Difficulty.BASIC:
+                self.LANDPAD_SPRING_CONSTANT = 14
+                # Motor position control with limited force gives is a restoration force back to neutral position.
+                # Up-down restoration force
+                p.setJointMotorControl2(
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                )
+                # Y rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                # X rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                self.WAVES = []
+            case Difficulty.EASY:
+                self.LANDPAD_SPRING_CONSTANT = 16
+                # Motor position control with limited force gives is a restoration force back to neutral position.
+                # Up-down restoration force
+                p.setJointMotorControl2(
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                )
+                # Y rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                # X rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                self.WAVES = [
+                    WaveData(wl=16, amp=0.9, ws=0.3, theta=0),
+                    WaveData(wl=10, amp=0.6, ws=0.15, theta=1.9),
+                ]
+            case _:
+                raise NotImplementedError()
+
+        return objIdx
+
     def _housekeeping(self):
         """Housekeeping function.
 
@@ -613,6 +715,8 @@ class BaseAviary(gym.Env):
         )
         #### Load ground plane, drone and obstacles models #########
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
+
+        self.LANDPAD_ID = self._setupLandingPad()
 
         self.DRONE_IDS = np.array(
             [

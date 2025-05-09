@@ -26,13 +26,13 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.typing import NDArray
 import pybullet as p
+from numpy.typing import NDArray
 
 from .control.DSLPIDControl import DSLPIDControl
-from .envs.CtrlAviary import CtrlAviary
 from .envs.BaseAviary import BaseAviary
-from .utils.enums import DroneModel, Physics
+from .envs.CtrlAviary import CtrlAviary
+from .utils.enums import Difficulty, DroneModel, Physics
 from .utils.Logger import Logger
 from .utils.utils import str2bool, sync
 
@@ -82,7 +82,7 @@ def run(
     H_STEP = 0.05
     R = 0.3
     INIT_XYZS = np.array(
-        [[3 * np.random.random(), 3 * np.random.random(), 2 + 2 * np.random.random()]]
+        [[3 * np.random.random(), 3 * np.random.random(), 5 + 2 * np.random.random()]]
     )
     INIT_RPYS = np.array([[0, 0, np.random.random() * (np.pi / 2)]])
 
@@ -99,6 +99,7 @@ def run(
         gui=gui,
         record=record_video,
         user_debug_gui=user_debug_gui,
+        difficulty=Difficulty.EASY,
     )
 
     #### Obtain the PyBullet Client ID from the environment ####
