@@ -57,8 +57,16 @@ def capture_image(env: BaseAviary) -> NDArray:
     return rgb
 
 
-def compute_position(image: NDArray):
-    """Compute the target position for the drone from the provided image"""
+def compute_position(image: NDArray, state: NDArray) -> NDArray:
+    """Compute the target position for the drone from the provided image
+
+    Args:
+        image (NDArray): An image captured by the drone's camera
+        state (NDArray): The drone's state vector
+
+    Returns:
+        NDArray: The target position for the drone
+    """
 
     # Implement this function
 
@@ -119,14 +127,13 @@ def run(
     action = np.zeros((1, 4))
     START = time.time()
     for i in range(0, int(duration_sec * env.CTRL_FREQ)):
-        #### Make it rain rubber ducks #############################
-        # if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
-
         #### Step the simulation ###################################
+
+        # `obs` is the drone state vector (contains position, orientation etc.)
         obs, _, _, _, _ = env.step(action)
 
         image = capture_image(env)
-        target_pos = compute_position(image)
+        target_pos = compute_position(image, obs)
 
         #### Compute control for the current way point #############
         # TODO decide your target control values
