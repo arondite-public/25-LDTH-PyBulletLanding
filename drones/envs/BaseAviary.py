@@ -40,7 +40,7 @@ class BaseAviary(gym.Env):
         record=False,
         obstacles=False,
         user_debug_gui=True,
-        vision_attributes=False,
+        vision_attributes=True,
         output_folder="results",
     ):
         """Initialization of a generic aviary environment.
@@ -170,7 +170,7 @@ class BaseAviary(gym.Env):
             os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
-            self.IMG_RES = np.array([64, 48])
+            self.IMG_RES = np.array([256, 256])
             self.IMG_FRAME_PER_SEC = 24
             self.IMG_CAPTURE_FREQ = int(self.PYB_FREQ / self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(
@@ -227,6 +227,25 @@ class BaseAviary(gym.Env):
                 self.INPUT_SWITCH = p.addUserDebugParameter(
                     "Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT
                 )
+            self.VID_WIDTH = int(640)
+            self.VID_HEIGHT = int(480)
+            self.FRAME_PER_SEC = 24
+            self.CAPTURE_FREQ = int(self.PYB_FREQ / self.FRAME_PER_SEC)
+            self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(
+                distance=3,
+                yaw=-30,
+                pitch=-30,
+                roll=0,
+                cameraTargetPosition=[0, 0, 0],
+                upAxisIndex=2,
+                physicsClientId=self.CLIENT,
+            )
+            self.CAM_PRO = p.computeProjectionMatrixFOV(
+                fov=60.0,
+                aspect=self.VID_WIDTH / self.VID_HEIGHT,
+                nearVal=0.1,
+                farVal=1000.0,
+            )
         else:
             #### Without debug GUI #####################################
             self.CLIENT = p.connect(p.DIRECT)
@@ -362,26 +381,26 @@ class BaseAviary(gym.Env):
 
         """
         #### Save PNG video frames if RECORD=True and GUI=False ####
-        if self.RECORD and not self.GUI and self.step_counter % self.CAPTURE_FREQ == 0:
-            [w, h, rgb, dep, seg] = p.getCameraImage(
-                width=self.VID_WIDTH,
-                height=self.VID_HEIGHT,
-                shadow=1,
-                viewMatrix=self.CAM_VIEW,
-                projectionMatrix=self.CAM_PRO,
-                renderer=p.ER_TINY_RENDERER,
-                flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
-                physicsClientId=self.CLIENT,
-            )
-            (Image.fromarray(np.reshape(rgb, (h, w, 4)), "RGBA")).save(
-                os.path.join(self.IMG_PATH, "frame_" + str(self.FRAME_NUM) + ".png")
-            )
-            #### Save the depth or segmentation view instead #######
-            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
-            # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
-            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8')
-            # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
-            self.FRAME_NUM += 1
+        # if self.RECORD and not self.GUI and self.step_counter % self.CAPTURE_FREQ == 0:
+        #     [w, h, rgb, dep, seg] = p.getCameraImage(
+        #         width=self.VID_WIDTH,
+        #         height=self.VID_HEIGHT,
+        #         shadow=1,
+        #         viewMatrix=self.CAM_VIEW,
+        #         projectionMatrix=self.CAM_PRO,
+        #         renderer=p.ER_TINY_RENDERER,
+        #         flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
+        #         physicsClientId=self.CLIENT,
+        #     )
+        #     (Image.fromarray(np.reshape(rgb, (h, w, 4)), "RGBA")).save(
+        #         os.path.join(self.IMG_PATH, "frame_" + str(self.FRAME_NUM) + ".png")
+        #     )
+        #     #### Save the depth or segmentation view instead #######
+        #     # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
+        #     # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+        #     # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8')
+        #     # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+        if self.RECORD and self.step_counter % self.CAPTURE_FREQ == 0:
             if self.VISION_ATTR:
                 for i in range(self.NUM_DRONES):
                     self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i)
@@ -649,6 +668,7 @@ class BaseAviary(gym.Env):
 
         """
         if self.RECORD and self.GUI:
+            self.FRAME_NUM = 0
             self.VIDEO_ID = p.startStateLogging(
                 loggingType=p.STATE_LOGGING_VIDEO_MP4,
                 fileName=os.path.join(
@@ -730,13 +750,16 @@ class BaseAviary(gym.Env):
             3, 3
         )
         #### Set target point, camera view and projection matrices #
-        target = np.dot(rot_mat, np.array([1000, 0, 0])) + np.array(
-            self.pos[nth_drone, :]
-        )
+        target = rot_mat @ np.array([0, 0, -1]) + np.array(self.pos[nth_drone, :])
+        drone_y_axis = np.array([0, 1, 0])
+        camera_offset = np.array([0, 0, -0.25])
         DRONE_CAM_VIEW = p.computeViewMatrix(
-            cameraEyePosition=self.pos[nth_drone, :] + np.array([0, 0, self.L]),
+            cameraEyePosition=self.pos[nth_drone, :]
+            + np.array([0, 0, self.L])
+            + camera_offset,
             cameraTargetPosition=target,
-            cameraUpVector=[0, 0, 1],
+            # cameraUpVector=[0, 0, 1],
+            cameraUpVector=rot_mat @ drone_y_axis,
             physicsClientId=self.CLIENT,
         )
         DRONE_CAM_PRO = p.computeProjectionMatrixFOV(
