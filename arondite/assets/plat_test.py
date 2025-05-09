@@ -58,7 +58,7 @@ def apply_waveforce_to_platform(
     coord = np.stack([xx, yy], axis=-1)
     for wave in waves:
         disp += eval_wave(wd=wave, timestep=timestep, coord=coord)
-    force_vec = disp * 20.0  # Spring constant
+    force_vec = disp * 20.0  # Spring(esque) constant
     for idx, jdx in product(range(samples), range(samples)):
         p.applyExternalForce(
             platformObjectIdx,
@@ -81,25 +81,22 @@ if __name__ == "__main__":
     res = p.loadURDF(
         "arondite/assets/platform.urdf", physicsClientId=physicsClient, useFixedBase=1
     )
-    # txtr = p.loadTexture("padmat.png")
-    # p.changeVisualShape(res, 2, textureUniqueId=txtr)
+    # Motor position control with limited force gives is a restoration force back to neutral position.
+    # Up-down restoration force
     p.setJointMotorControl2(res, 0, p.POSITION_CONTROL, targetPosition=0, force=350)
+    # Y rotation restoration Torque
     p.setJointMotorControl2(res, 1, p.POSITION_CONTROL, targetPosition=0, force=10)
+    # X rotation restoration Torque
     p.setJointMotorControl2(res, 2, p.POSITION_CONTROL, targetPosition=0, force=10)
+
     p.setGravity(0, 0, -9.81)
     waves = makewave_easy()
     t = 0.0
     for i in range(1000):
-        #     p.applyExternalForce(0, 1, (0.0, 0.0, 100.0), (0.0, 0.2, 0.0), p.LINK_FRAME)
-        #     p.applyExternalForce(0, 2, (0.0, 0.0, 100.0), (0.2, 0.0, 0.0), p.LINK_FRAME)
-        # p.applyExternalForce(0, 1, (0.0, 0.0, -10000.0), (0.0, 0.0, 0.0), p.LINK_FRAME)
-        if i < 200:
+        if (
+            i < 200
+        ):  # Only apply wave forces for first 200 steps to test restoration force.
             apply_waveforce_to_platform(timestep=t, waves=waves, platformObjectIdx=0)
         p.stepSimulation()
         t += 1.0 / 60.0
         time.sleep(1.0 / 60.0)
-    # tmp = makewave_easy()
-    # res1 = eval_wave(wd=tmp, timestep=0.0, samples=3, bound=0.2)
-    # print(res1)
-    # res2 = eval_wave(wd=tmp, timestep=0.1)
-    # print(res2)
