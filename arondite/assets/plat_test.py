@@ -47,6 +47,16 @@ def makewave_easy() -> List[WaveData]:
     ]
 
 
+def restoration_forces_easy(objIdx: int):
+    # Motor position control with limited force gives is a restoration force back to neutral position.
+    # Up-down restoration force
+    p.setJointMotorControl2(objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350)
+    # Y rotation restoration Torque
+    p.setJointMotorControl2(objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10)
+    # X rotation restoration Torque
+    p.setJointMotorControl2(objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10)
+
+
 def apply_waveforce_to_platform(
     timestep: float, waves: List[WaveData], platformObjectIdx: int
 ):
@@ -81,16 +91,10 @@ if __name__ == "__main__":
     res = p.loadURDF(
         "arondite/assets/platform.urdf", physicsClientId=physicsClient, useFixedBase=1
     )
-    # Motor position control with limited force gives is a restoration force back to neutral position.
-    # Up-down restoration force
-    p.setJointMotorControl2(res, 0, p.POSITION_CONTROL, targetPosition=0, force=350)
-    # Y rotation restoration Torque
-    p.setJointMotorControl2(res, 1, p.POSITION_CONTROL, targetPosition=0, force=10)
-    # X rotation restoration Torque
-    p.setJointMotorControl2(res, 2, p.POSITION_CONTROL, targetPosition=0, force=10)
 
     p.setGravity(0, 0, -9.81)
     waves = makewave_easy()
+    restoration_forces_easy(res)
     t = 0.0
     for i in range(1000):
         if (
