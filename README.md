@@ -1,13 +1,10 @@
-# PythonTemplate
-This is a template for python projects. It includes a barebones .gititnore as well as some reccomended pre-commit hooks.
+# Arondite PyBullet Landing Challenge
 
 ## Setup
 
-1. Step 1
-2. Step 2
-3. Step 3
+1. Install [uv](astral.sh/uv)
+2. `uv sync`
 
-Further setup notes
 
 ## Running
 The application can be run using the following command:
