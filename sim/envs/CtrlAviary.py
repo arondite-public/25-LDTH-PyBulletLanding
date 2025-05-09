@@ -25,7 +25,7 @@ class CtrlAviary(BaseAviary):
         obstacles=False,
         user_debug_gui=True,
         output_folder="results",
-        difficulty: Difficulty = Difficulty.BASIC,
+        difficulty: Difficulty = Difficulty.SS0,
     ):
         """Initialization of an aviary environment for control applications.
 

@@ -1,22 +1,17 @@
 import argparse
-import math
-import os
-import pdb
-import random
 import time
-from datetime import datetime
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pybullet as p
 from numpy.typing import NDArray
 
-from .control.DSLPIDControl import DSLPIDControl
-from .envs.BaseAviary import BaseAviary
-from .envs.CtrlAviary import CtrlAviary
-from .utils.enums import Difficulty, DroneModel, Physics
-from .utils.Logger import Logger
-from .utils.utils import str2bool, sync
+from sim.control.DSLPIDControl import DSLPIDControl
+from sim.envs.BaseAviary import BaseAviary
+from sim.envs.CtrlAviary import CtrlAviary
+from sim.utils.enums import Difficulty, DroneModel, Physics
+from sim.utils.Logger import Logger
+from sim.utils.utils import str2bool, sync
+
+from solution.compute_target_position import compute_target_position
 
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_PHYSICS = Physics("pyb")
@@ -28,6 +23,7 @@ DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = "results"
+DEFAULT_DIFFICULTY = Difficulty.SS0
 
 
 def capture_image(env: BaseAviary) -> NDArray:
@@ -37,22 +33,6 @@ def capture_image(env: BaseAviary) -> NDArray:
     """
     rgb, _, _ = env._getDroneImages(0, segmentation=False)
     return rgb
-
-
-def compute_position(image: NDArray, state: NDArray) -> NDArray:
-    """Compute the target position for the drone from the provided image
-
-    Args:
-        image (NDArray): An image captured by the drone's camera
-        state (NDArray): The drone's state vector
-
-    Returns:
-        NDArray: The target position for the drone
-    """
-
-    # Implement this function
-
-    return np.array([0, 0, 1])  # Dummy position
 
 
 def run(
@@ -66,6 +46,7 @@ def run(
     control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
     duration_sec=DEFAULT_DURATION_SEC,
     output_folder=DEFAULT_OUTPUT_FOLDER,
+    difficulty=DEFAULT_DIFFICULTY,
 ):
     #### Initialize the simulation #############################
     H = 0.1
@@ -89,7 +70,7 @@ def run(
         gui=gui,
         record=record_video,
         user_debug_gui=user_debug_gui,
-        difficulty=Difficulty.EASY,
+        difficulty=difficulty,
     )
 
     #### Obtain the PyBullet Client ID from the environment ####
@@ -115,7 +96,7 @@ def run(
         obs, _, _, _, _ = env.step(action)
 
         image = capture_image(env)
-        target_pos = compute_position(image, obs)
+        target_pos = compute_target_position(image, obs)
 
         #### Compute control for the current way point #############
         # TODO decide your target control values
@@ -233,6 +214,13 @@ if __name__ == "__main__":
         default=DEFAULT_OUTPUT_FOLDER,
         type=str,
         help='Folder where to save logs (default: "results")',
+        metavar="",
+    )
+    parser.add_argument(
+        "--difficulty",
+        default=DEFAULT_DIFFICULTY,
+        type=Difficulty,
+        help='Difficulty level (default: "SS0")',
         metavar="",
     )
     ARGS = parser.parse_args()
