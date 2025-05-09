@@ -29,18 +29,37 @@
           </inertial>
         <visual>
             <geometry>
-                <mesh filename="landingpad.obj" scale="0.2 0.2 0.2"/>
-                 <!-- <box size="2.5 2.5 0.01"/> -->
+                 <box size="2.5 2.5 0.01"/>
             </geometry>
-            <material name="padmaterial">
-                <texture filename="padmat.png"/>
+            <material name="black">
+                <color rgba="0 0 0 1"/>
             </material>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="landingpad.obj" scale="0.2 0.2 0.2"/>
+                 <box size="2.5 2.5 0.01"/>
             </geometry>
         </collision>
+    </link>
+    <link name="horizontal">
+        <visual>
+            <geometry>
+                 <box size="2.5 0.2 0.01"/>
+            </geometry>
+            <material name="yellow">
+                <color rgba="255 255 0 1"/>
+            </material>
+        </visual>
+    </link>
+    <link name="vertical">
+        <visual>
+            <geometry>
+                 <box size="0.2 2.5 0.01"/>
+            </geometry>
+            <material name="yellow">
+                <color rgba="255 255 0 1"/>
+            </material>
+        </visual>
     </link>
     <joint name="base_to_helipad_linear" type="prismatic">
         <parent link="base_link" />
@@ -62,5 +81,15 @@
         <origin xyz="0.0 0.0 0.25" />
         <axis xyz="0.0 1.0 0.0" />
         <limit lower="-0.35" upper="0.35" effort="100" velocity="100"/>
+    </joint>
+    <joint name="helipad_to_horizontal" type="fixed">
+        <parent link="helipad_yrot_link" />
+        <child link="horizontal" />
+        <origin xyz="0.0 0.0 0.0001" />
+    </joint>
+    <joint name="helipad_to_vertical" type="fixed">
+        <parent link="helipad_yrot_link" />
+        <child link="vertical" />
+        <origin xyz="0.0 0.0 0.0001" />
     </joint>
 </robot>
