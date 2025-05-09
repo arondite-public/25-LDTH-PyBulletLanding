@@ -1,17 +1,12 @@
-import collections
 import os
 import time
 import xml.etree.ElementTree as etxml
 from dataclasses import dataclass
 from datetime import datetime
-from itertools import product
-from sys import platform
-from typing import List, Optional, override
+from typing import List, Optional
 
 import gymnasium as gym
 
-# import pkgutil
-# egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
 import pybullet as p
 import pybullet_data
@@ -59,7 +54,7 @@ class BaseAviary(gym.Env):
         user_debug_gui=True,
         vision_attributes=True,
         output_folder="results",
-        difficulty: Difficulty = Difficulty.BASIC,
+        difficulty: Difficulty = Difficulty.SS0,
     ):
         """Initialization of a generic aviary environment.
 
@@ -637,14 +632,14 @@ class BaseAviary(gym.Env):
 
     def _setupLandingPad(self) -> int:
         objIdx = p.loadURDF(
-            "arondite/assets/platform.urdf",
+            "lib/assets/platform.urdf",
             basePosition=[np.random.random() * 2, np.random.random() * 2, 0.5],
             physicsClientId=self.CLIENT,
             useFixedBase=1,
         )
         match self.DIFFICULTY:
-            case Difficulty.BASIC:
-                self.LANDPAD_SPRING_CONSTANT = 14
+            case Difficulty.SS0:
+                self.LANDPAD_SPRING_CONSTANT = 1
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
@@ -659,8 +654,24 @@ class BaseAviary(gym.Env):
                     objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
                 )
                 self.WAVES = []
-            case Difficulty.EASY:
+            case Difficulty.SS1:
                 self.LANDPAD_SPRING_CONSTANT = 2
+                # Motor position control with limited force gives is a restoration force back to neutral position.
+                # Up-down restoration force
+                p.setJointMotorControl2(
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                )
+                # Y rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                # X rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                self.WAVES = []
+            case Difficulty.SS3:
+                self.LANDPAD_SPRING_CONSTANT = 6
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
@@ -677,6 +688,44 @@ class BaseAviary(gym.Env):
                 self.WAVES = [
                     WaveData(wl=16, amp=0.82, ws=0.4, theta=0),
                     WaveData(wl=12, amp=0.8, ws=0.4, theta=1.9),
+                ]
+            case Difficulty.SS5:
+                self.LANDPAD_SPRING_CONSTANT = 10
+                # Motor position control with limited force gives is a restoration force back to neutral position.
+                # Up-down restoration force
+                p.setJointMotorControl2(
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=100
+                )
+                # Y rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                # X rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                self.WAVES = [
+                    WaveData(wl=16, amp=2.5, ws=0.4, theta=0),
+                    WaveData(wl=12, amp=2.5, ws=0.4, theta=1.9),
+                ]
+            case Difficulty.SS7:
+                self.LANDPAD_SPRING_CONSTANT = 14
+                # Motor position control with limited force gives is a restoration force back to neutral position.
+                # Up-down restoration force
+                p.setJointMotorControl2(
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=100
+                )
+                # Y rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                # X rotation restoration Torque
+                p.setJointMotorControl2(
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                )
+                self.WAVES = [
+                    WaveData(wl=16, amp=5.82, ws=0.4, theta=0),
+                    WaveData(wl=12, amp=4.8, ws=0.4, theta=1.9),
                 ]
             case _:
                 raise NotImplementedError()
@@ -725,7 +774,7 @@ class BaseAviary(gym.Env):
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
-                    "./drones/assets/" + self.URDF,
+                    "./sim/assets/" + self.URDF,
                     self.INIT_XYZS[i, :],
                     p.getQuaternionFromEuler(self.INIT_RPYS[i, :]),
                     flags=p.URDF_USE_INERTIA_FROM_FILE,
@@ -1300,7 +1349,7 @@ class BaseAviary(gym.Env):
         files in folder `assets/`.
 
         """
-        URDF_TREE = etxml.parse("drones/assets/" + self.URDF).getroot()
+        URDF_TREE = etxml.parse("sim/assets/" + self.URDF).getroot()
         M = float(URDF_TREE[1][0][1].attrib["value"])
         L = float(URDF_TREE[0].attrib["arm"])
         THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib["thrust2weight"])
