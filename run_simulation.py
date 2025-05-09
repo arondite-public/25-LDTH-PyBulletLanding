@@ -96,7 +96,7 @@ def run(
         obs, _, _, _, _ = env.step(action)
 
         image = capture_image(env)
-        target_pos = compute_target_position(image, obs)
+        target_pos, target_rpy = compute_target_position(image, obs)
 
         #### Compute control for the current way point #############
         # TODO decide your target control values
@@ -104,7 +104,7 @@ def run(
             control_timestep=env.CTRL_TIMESTEP,
             state=obs[0],
             target_pos=target_pos,
-            target_rpy=np.array([0.0, 0.0, 0.0], dtype=np.single),
+            target_rpy=target_rpy,
         )
 
         #### Log the simulation ####################################

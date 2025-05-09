@@ -624,7 +624,6 @@ class BaseAviary(gym.Env):
         -------
         ndarray:
             (NUM_DRONES,)-shaped array of ints containing the drones' ids.
-
         """
         return self.DRONE_IDS
 
@@ -643,7 +642,7 @@ class BaseAviary(gym.Env):
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
-                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=100
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
@@ -655,11 +654,11 @@ class BaseAviary(gym.Env):
                 )
                 self.WAVES = []
             case Difficulty.SS1:
-                self.LANDPAD_SPRING_CONSTANT = 2
+                self.LANDPAD_SPRING_CONSTANT = 4
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
-                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=100
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
@@ -669,7 +668,10 @@ class BaseAviary(gym.Env):
                 p.setJointMotorControl2(
                     objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
                 )
-                self.WAVES = []
+                self.WAVES = [
+                    WaveData(wl=16, amp=0.2, ws=0.4, theta=1.8),
+                    WaveData(wl=12, amp=0.2, ws=0.4, theta=0),
+                ]
             case Difficulty.SS3:
                 self.LANDPAD_SPRING_CONSTANT = 6
                 # Motor position control with limited force gives is a restoration force back to neutral position.
