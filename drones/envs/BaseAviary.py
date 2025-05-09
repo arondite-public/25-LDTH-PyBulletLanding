@@ -721,7 +721,9 @@ class BaseAviary(gym.Env):
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
-                    "./drones/assets/" + self.URDF,
+                    pkg_resources.resource_filename(
+                        "gym_pybullet_drones", "assets/" + self.URDF
+                    ),
                     self.INIT_XYZS[i, :],
                     p.getQuaternionFromEuler(self.INIT_RPYS[i, :]),
                     flags=p.URDF_USE_INERTIA_FROM_FILE,
