@@ -13,7 +13,6 @@ import gymnasium as gym
 # import pkgutil
 # egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
-import pkg_resources
 import pybullet as p
 import pybullet_data
 from PIL import Image
@@ -721,9 +720,7 @@ class BaseAviary(gym.Env):
         self.DRONE_IDS = np.array(
             [
                 p.loadURDF(
-                    pkg_resources.resource_filename(
-                        "gym_pybullet_drones", "assets/" + self.URDF
-                    ),
+                    "./drones/assets/" + self.URDF,
                     self.INIT_XYZS[i, :],
                     p.getQuaternionFromEuler(self.INIT_RPYS[i, :]),
                     flags=p.URDF_USE_INERTIA_FROM_FILE,
