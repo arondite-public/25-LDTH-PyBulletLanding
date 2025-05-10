@@ -629,8 +629,8 @@ class BaseAviary(gym.Env):
     ################################################################################
 
     def _setupLandingPad(self) -> int:
-        # spawnpoint = [np.random.random() * 2, np.random.random() * 2, 0.0]
-        spawnpoint = [0, 0, 0]
+        spawnpoint = [np.random.random() * 2.2, np.random.random() * 2.2, 0.0]
+        # spawnpoint = [0, 0, 0]
 
         match self.DIFFICULTY:
             case Difficulty.SS0:
