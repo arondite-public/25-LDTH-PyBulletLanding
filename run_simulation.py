@@ -10,7 +10,6 @@ from sim.envs.CtrlAviary import CtrlAviary
 from sim.utils.enums import Difficulty, DroneModel, Physics
 from sim.utils.Logger import Logger
 from sim.utils.utils import str2bool, sync
-
 from solution.compute_target_position import compute_target_position
 
 DEFAULT_DRONES = DroneModel("cf2x")
@@ -96,7 +95,10 @@ def run(
         obs, _, _, _, _ = env.step(action)
 
         image = capture_image(env)
-        target_pos, target_rpy = compute_target_position(image, obs)
+        target_pos, target_rpy, new_max_rpm = compute_target_position(
+            image, obs, env.MAX_RPM
+        )
+        env.MAX_RPM = new_max_rpm
 
         #### Compute control for the current way point #############
         # TODO decide your target control values
