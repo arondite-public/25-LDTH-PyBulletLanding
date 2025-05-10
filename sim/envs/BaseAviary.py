@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import List, Optional
 
 import gymnasium as gym
-
 import numpy as np
 import pybullet as p
 import pybullet_data
@@ -630,14 +629,17 @@ class BaseAviary(gym.Env):
     ################################################################################
 
     def _setupLandingPad(self) -> int:
-        objIdx = p.loadURDF(
-            "lib/assets/platform.urdf",
-            basePosition=[np.random.random() * 2, np.random.random() * 2, 0.5],
-            physicsClientId=self.CLIENT,
-            useFixedBase=1,
-        )
+        # spawnpoint = [np.random.random() * 2, np.random.random() * 2, 0.0]
+        spawnpoint = [0, 0, 0]
+
         match self.DIFFICULTY:
             case Difficulty.SS0:
+                objIdx = p.loadURDF(
+                    "sim/assets/platform.urdf",
+                    basePosition=spawnpoint,
+                    physicsClientId=self.CLIENT,
+                    useFixedBase=1,
+                )
                 self.LANDPAD_SPRING_CONSTANT = 1
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
@@ -646,15 +648,21 @@ class BaseAviary(gym.Env):
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=20
                 )
                 # X rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=20
                 )
                 self.WAVES = []
             case Difficulty.SS2:
-                self.LANDPAD_SPRING_CONSTANT = 6
+                objIdx = p.loadURDF(
+                    "sim/assets/platform.urdf",
+                    basePosition=spawnpoint,
+                    physicsClientId=self.CLIENT,
+                    useFixedBase=1,
+                )
+                self.LANDPAD_SPRING_CONSTANT = 9
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
@@ -662,72 +670,91 @@ class BaseAviary(gym.Env):
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=9
                 )
                 # X rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=9
                 )
                 self.WAVES = [
-                    WaveData(wl=16, amp=0.5, ws=0.4, theta=0),
-                    WaveData(wl=12, amp=0.5, ws=0.4, theta=1.8),
+                    WaveData(wl=16, amp=0.5, ws=0.5, theta=0),
+                    WaveData(wl=16, amp=0.5, ws=0.5, theta=np.pi / 2),
                 ]
             case Difficulty.SS3:
-                self.LANDPAD_SPRING_CONSTANT = 6
+                objIdx = p.loadURDF(
+                    "sim/assets/platform.urdf",
+                    basePosition=spawnpoint,
+                    physicsClientId=self.CLIENT,
+                    useFixedBase=1,
+                )
+                self.LANDPAD_SPRING_CONSTANT = 9
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
-                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=90
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=9
                 )
                 # X rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=9
                 )
                 self.WAVES = [
-                    WaveData(wl=16, amp=0.82, ws=0.4, theta=0),
-                    WaveData(wl=12, amp=0.8, ws=0.4, theta=1.9),
+                    WaveData(wl=16, amp=0.5, ws=0.5, theta=0),
+                    WaveData(wl=16, amp=0.5, ws=0.5, theta=np.pi / 2),
                 ]
             case Difficulty.SS5:
-                self.LANDPAD_SPRING_CONSTANT = 10
+                objIdx = p.loadURDF(
+                    "sim/assets/platform2.urdf",
+                    basePosition=spawnpoint,
+                    physicsClientId=self.CLIENT,
+                    useFixedBase=1,
+                )
+                self.LANDPAD_SPRING_CONSTANT = 9
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
-                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=95
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10.3
                 )
                 # X rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10.3
                 )
                 self.WAVES = [
-                    WaveData(wl=16, amp=2.5, ws=0.4, theta=0),
+                    WaveData(wl=5, amp=1.3, ws=0.8, theta=np.pi / 2),
                     # WaveData(wl=12, amp=2.5, ws=0.4, theta=1.9),
                 ]
             case Difficulty.SS7:
+                objIdx = p.loadURDF(
+                    "sim/assets/platform3.urdf",
+                    basePosition=spawnpoint,
+                    physicsClientId=self.CLIENT,
+                    useFixedBase=1,
+                )
                 self.LANDPAD_SPRING_CONSTANT = 10
                 # Motor position control with limited force gives is a restoration force back to neutral position.
                 # Up-down restoration force
                 p.setJointMotorControl2(
-                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=350
+                    objIdx, 0, p.POSITION_CONTROL, targetPosition=0, force=100
                 )
                 # Y rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 1, p.POSITION_CONTROL, targetPosition=0, force=30
                 )
                 # X rotation restoration Torque
                 p.setJointMotorControl2(
-                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=10
+                    objIdx, 2, p.POSITION_CONTROL, targetPosition=0, force=30
                 )
                 self.WAVES = [
                     WaveData(wl=16, amp=5.82, ws=0.4, theta=0),
                     WaveData(wl=12, amp=4.8, ws=0.4, theta=1.9),
+                    # WaveData(wl=20, amp=10, ws=1.0, theta=-np.pi / 2),
                 ]
             case _:
                 raise NotImplementedError()

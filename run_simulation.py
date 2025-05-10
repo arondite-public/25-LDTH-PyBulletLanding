@@ -219,6 +219,7 @@ if __name__ == "__main__":
         metavar="",
     )
     parser.add_argument(
+        "-d",
         "--difficulty",
         default=DEFAULT_DIFFICULTY,
         type=Difficulty,
