@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def compute_target_position(image: NDArray, state: NDArray) -> NDArray:
+def compute_target_position(image: NDArray, state: NDArray) -> tuple[NDArray, NDArray]:
     """Compute the target position for the drone from the provided RGB image
 
     Args:
@@ -11,8 +11,9 @@ def compute_target_position(image: NDArray, state: NDArray) -> NDArray:
 
     Returns:
         NDArray: The target position for the drone
+        NDArray: The target yaw, pitch and roll for the drone
     """
 
     ### IMPLEMENT YOUR SOLUTION HERE ###
 
-    return np.array([0, 0, 0])  # Dummy position as demonstration
+    return np.array([0, 0, -0.5]), np.array([0, 0, 0])  # Dummy position as demonstration

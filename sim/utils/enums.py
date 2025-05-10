@@ -60,7 +60,7 @@ class ObservationType(Enum):
 
 class Difficulty(Enum):
     SS0 = "SS0"
-    SS1 = "SS1"
+    SS2 = "SS2"
     SS3 = "SS3"
     SS5 = "SS5"
     SS7 = "SS7"

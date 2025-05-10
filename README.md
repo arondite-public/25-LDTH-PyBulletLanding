@@ -39,6 +39,6 @@ The only code you need to modify is in the `solution/` directory; please don't m
 
 ## Evaluating
 
-We will assess the recovery rate (the UAV's ability to land safely) in five different [sea states](https://en.wikipedia.org/wiki/Sea_state): SS0, SS1, SS3, SS5, SS7. SS0 is glassy and calm; SS7 is rough waters which typically only cargo ships and military vessels are able to operate in.
+We will assess the recovery rate (the UAV's ability to land safely) in five different [sea states](https://en.wikipedia.org/wiki/Sea_state): SS0, SS2, SS3, SS5, SS7. SS0 is glassy and calm; SS7 is rough waters which typically only cargo ships and military vessels are able to operate in.
 
 Whether or not a landing counts as succesful recovery will be assessed by the judges - if you land at 100km/h, or land upside down, this won't count! If you'd like clarification on whether or not a landing is succesful, please talk to the judges.

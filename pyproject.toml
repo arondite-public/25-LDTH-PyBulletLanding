@@ -1,10 +1,7 @@
 [project]
 name = "gym-pybullet-drones"
 version = "2.0.0"
-description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
-authors = [
-  { name = "Jacopo Panerati", email = "jacopo.panerati@utoronto.ca" }
-]
+description = "Arondite PyBullet USV drone environment for reinforcement learning"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
@@ -17,9 +14,6 @@ dependencies = [
   "gymnasium~=0.28",
   "stable-baselines3>=2.0.0",
 ]
-
-# [project.urls]
-# Repository = "https://github.com/utiasDSL/gym-pybullet-drones"
 
 # [build-system]
 # requires = ["hatchling"]
